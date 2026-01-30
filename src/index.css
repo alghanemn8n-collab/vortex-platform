@@ -66,6 +66,7 @@ body {
 
 .text-gradient {
   background: var(--gradient-main);
+  background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
@@ -197,6 +198,61 @@ object {
   }
 }
 
+/* Mobile-Specific Overrides and Fixes */
+@media (max-width: 768px) {
+  #root {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  main {
+    padding-top: 70px !important;
+    flex: 1;
+  }
+
+  /* Glassmorphism improvements for mobile */
+  .glass-panel {
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    background: rgba(255, 255, 255, 0.08);
+    /* Slightly more opaque for readability */
+    padding: 1.5rem !important;
+  }
+
+  /* Text & Contrast */
+  .text-gradient {
+    background-size: 200% auto;
+    animation: shine 3s linear infinite;
+  }
+
+  @keyframes shine {
+    to {
+      background-position: 200% center;
+    }
+  }
+
+  /* Sidebar/Navbar Links visibility */
+  .navbar-links {
+    width: 85% !important;
+  }
+
+  /* Agent Cards optimization */
+  .agent-card {
+    padding: 2rem 1.5rem !important;
+    margin-bottom: 1rem;
+  }
+
+  .agent-icon {
+    font-size: 3rem !important;
+  }
+
+  /* Footer responsiveness */
+  footer {
+    padding: 3rem 1rem !important;
+  }
+}
+
 /* Extra small devices */
 @media (max-width: 480px) {
   html {
@@ -224,4 +280,12 @@ object {
   p {
     font-size: 0.95rem;
   }
+}
+
+/* Fix for Streamlit Iframe visibility */
+html,
+body,
+#root {
+  height: auto;
+  min-height: 100%;
 }

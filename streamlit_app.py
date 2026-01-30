@@ -68,7 +68,7 @@ def get_vortex_html(api_key):
                 }}
 
                 if (!window.VORTEX_API_KEY) {{
-                    return new Response(JSON.stringify({{ success: false, message: "يرجى إدخال API Key في القائمة الجانبية." }}), {{ status: 400 }});
+                    return new Response(JSON.stringify({{ success: false, message: "يرجى إدخال Gemini API Key في القائمة الجانبية لتفعيل المحادثة." }}), {{ status: 400 }});
                 }}
 
                 try {{
@@ -82,6 +82,11 @@ def get_vortex_html(api_key):
                         }})
                     }});
                     const data = await resp.json();
+                    
+                    if (data.error) {{
+                         return new Response(JSON.stringify({{ success: false, message: "API Error: " + data.error.message }}), {{ status: 400 }});
+                    }}
+                    
                     const text = data.candidates[0].content.parts[0].text;
                     return new Response(JSON.stringify({{ success: true, message: text }}), {{ status: 200 }});
                 }} catch (e) {{
@@ -94,15 +99,31 @@ def get_vortex_html(api_key):
     </script>
     """
     
-    # Inline CSS and JS into index.html
+    # Inline CSS and JS into index.html using more robust injection
+    import re
     html = index_html
-    html = html.replace('<link rel="stylesheet"', '<!-- <link rel="stylesheet"')
-    html = html.replace('href="/assets/index', '--> <style>' + css_content + '</style> <!--')
     
-    html = html.replace('<script type="module"', '<!-- <script type="module"')
-    html = html.replace('src="/assets/index', '--> ' + shim + '<script>' + js_content + '</script> <!--')
+    # 1. Clean up existing tags
+    html = re.sub(r'<script type="module" crossorigin src="/assets/index-.*?\.js"></script>', '', html)
+    html = re.sub(r'<link rel="stylesheet" crossorigin href="/assets/index-.*?\.css">', '', html)
     
-    # Fix relative paths for static assets like vite.svg
+    # 2. Inject CSS and JS (Order matters: CSS first, then Shim, then JS)
+    injection = f"""
+    <style>
+    {css_content}
+    </style>
+    {shim}
+    <script>
+    {js_content}
+    </script>
+    """
+    
+    if '</head>' in html:
+        html = html.replace('</head>', f'{injection}</head>')
+    else:
+        html = f"{html}{injection}"
+    
+    # Fix relative paths for static assets
     html = html.replace('href="/vite.svg"', 'href="https://vortex-platform.netlify.app/vite.svg"')
     
     return html
