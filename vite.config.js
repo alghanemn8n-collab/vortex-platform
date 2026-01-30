@@ -6,7 +6,7 @@ export default defineConfig({
   plugins: [react()],
   build: {
     // Disable code splitting for Streamlit compatibility
-    // Streamlit loads the app via srcdoc which doesn't support ES module imports
+    // Streamlit loads the app via srcdoc which doesn't support ES module imports well
     rollupOptions: {
       output: {
         // Single bundle - no code splitting

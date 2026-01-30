@@ -60,9 +60,53 @@ def get_vortex_html(api_key):
         var _vx_originalFetch = window.fetch;
         
         window.fetch = function(_vx_url, _vx_options) {{
-            // Agents API
+            // === Master Agent Create API ===
+            if (_vx_url.indexOf('/api/master-agent/create') !== -1 && _vx_options.method === 'POST') {{
+                console.log('Vortex: Master Agent called');
+                var _vx_body = JSON.parse(_vx_options.body);
+                var _vx_desc = _vx_body.description;
+                
+                if (!window.VORTEX_API_KEY) {{
+                     return Promise.resolve(new Response(JSON.stringify({{ success: false, message: "No API Key" }}), {{ status: 400 }}));
+                }}
+
+                var _vx_prompt = `You are an expert AI Agent Architect. Based on the user's description, generate a JSON configuration for a specialized AI agent.
+User Description: "${{_vx_desc}}"
+
+Output MUST be a valid JSON object with this structure:
+{{
+  "name": "Creative and professional agent name",
+  "instruction": "Detailed system prompt/instructions for the agent...",
+  "model": "gemini-2.0-flash",
+  "tools": ["google_search"] 
+}}
+(Select tools from: google_search, code_executor. Use google_search if they need info, code_executor for math/logic).`;
+
+                var _vx_geminiUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' + window.VORTEX_API_KEY;
+                
+                return _vx_originalFetch(_vx_geminiUrl, {{
+                    method: 'POST',
+                    headers: {{ 'Content-Type': 'application/json' }},
+                    body: JSON.stringify({{
+                        contents: [{{ parts: [{{ text: _vx_prompt }}] }}]
+                    }})
+                }})
+                .then(function(resp) {{ return resp.json(); }})
+                .then(function(data) {{
+                    var _vx_text = data.candidates[0].content.parts[0].text;
+                    // Extract JSON if it's wrapped in markdown
+                    _vx_text = _vx_text.replace(/```json/g, '').replace(/```/g, '').trim();
+                    var _vx_config = JSON.parse(_vx_text);
+                    return new Response(JSON.stringify({{ success: true, agentConfig: _vx_config }}), {{ status: 200 }});
+                }})
+                .catch(function(err) {{
+                    console.error('Master Agent Error:', err);
+                    return new Response(JSON.stringify({{ success: false, error: err.message }}), {{ status: 500 }});
+                }});
+            }}
+
+            // === Agents API ===
             if (_vx_url.indexOf('/api/agents') !== -1) {{
-                console.log('Vortex: Intercepted agents call');
                 var _vx_agents = JSON.parse(localStorage.getItem('vortex_agents') || '[]');
                 
                 if (_vx_options && _vx_options.method === 'POST') {{
@@ -93,7 +137,6 @@ def get_vortex_html(api_key):
             
             // Chat API
             if (_vx_url.indexOf('/api/chat') !== -1) {{
-                console.log('Vortex: Intercepted chat call');
                 var _vx_body = JSON.parse(_vx_options.body);
                 var _vx_userMessage = _vx_body.message;
                 var _vx_agentId = _vx_body.agent_id;
@@ -122,7 +165,7 @@ def get_vortex_html(api_key):
                 .then(function(_vx_data) {{
                     if (_vx_data.error) throw new Error(_vx_data.error.message);
                     var _vx_text = _vx_data.candidates[0].content.parts[0].text;
-                    return new Response(JSON.stringify({{ success: true, message: _vx_text }}), {{ status: 200 }});
+                    return new Response(JSON.stringify({{ success: true, message: _vx_text }}), {{ status: 200 }}));
                 }})
                 .catch(function(_vx_err) {{
                     return new Response(JSON.stringify({{ success: false, message: "Error: " + _vx_err.message }}), {{ status: 500 }});

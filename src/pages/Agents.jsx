@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Bot, Plus, Settings, BarChart3, MessageSquare, Sparkles, Trash2, Play, Zap } from 'lucide-react';
+import { Bot, Plus, Settings, BarChart3, MessageSquare, Sparkles, Trash2, Play, Zap, Wand2 } from 'lucide-react';
 import './Agents.css';
 
 const Agents = () => {
@@ -9,6 +9,12 @@ const Agents = () => {
     const [isLoading, setIsLoading] = useState(true);
     const [activeTab, setActiveTab] = useState('dashboard');
     const [stats, setStats] = useState({ agents: 0, chats: 0, apiStatus: false });
+
+    // Master Agent State
+    const [masterAgentMode, setMasterAgentMode] = useState(false);
+    const [userDescription, setUserDescription] = useState('');
+    const [isGenerating, setIsGenerating] = useState(false);
+
     const [newAgent, setNewAgent] = useState({
         name: '',
         instruction: '',
@@ -67,6 +73,32 @@ const Agents = () => {
         } catch (error) {
             console.error('Error creating agent:', error);
             alert('فشل في إنشاء الوكيل');
+        }
+    };
+
+    const handleMasterAgentCreate = async () => {
+        if (!userDescription.trim()) return;
+        setIsGenerating(true);
+        try {
+            const response = await fetch('/api/master-agent/create', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ description: userDescription })
+            });
+            const data = await response.json();
+            if (data.success && data.agentConfig) {
+                setNewAgent(data.agentConfig);
+                setMasterAgentMode(false);
+                // Scroll to form
+                document.querySelector('.agent-form')?.scrollIntoView({ behavior: 'smooth' });
+            } else {
+                alert('عذراً، لم أتمكن من توليد وكيل بهذا الوصف. حاول مرة أخرى بتفاصيل أكثر.');
+            }
+        } catch (error) {
+            console.error('Master Agent Error:', error);
+            alert('حدث خطأ أثناء الاتصال بالوكيل العام.');
+        } finally {
+            setIsGenerating(false);
         }
     };
 
@@ -278,11 +310,68 @@ const Agents = () => {
                     {/* Create Agent Tab */}
                     {activeTab === 'create' && (
                         <div className="create-agent-content">
+                            {/* Master Agent Toggle */}
+                            <div className="creation-mode-toggle glass-panel">
+                                <button
+                                    className={`mode-btn ${masterAgentMode ? 'active' : ''}`}
+                                    onClick={() => setMasterAgentMode(true)}
+                                >
+                                    <Wand2 size={20} />
+                                    <span>الإنشاء السحري (AI)</span>
+                                </button>
+                                <button
+                                    className={`mode-btn ${!masterAgentMode ? 'active' : ''}`}
+                                    onClick={() => setMasterAgentMode(false)}
+                                >
+                                    <Settings size={20} />
+                                    <span>الإنشاء اليدوي</span>
+                                </button>
+                            </div>
+
+                            {/* Master Agent Interface */}
+                            {masterAgentMode && (
+                                <div className="master-agent-interface glass-panel highlight-border">
+                                    <div className="master-header">
+                                        <div className="master-icon-container">
+                                            <Sparkles size={32} className="master-icon animate-pulse" />
+                                        </div>
+                                        <div>
+                                            <h2>الوكيل العام (Master Agent)</h2>
+                                            <p>صِف عملك أو حاجتك، وسأقوم ببناء الوكيل المناسب لك تلقائياً 🪄</p>
+                                        </div>
+                                    </div>
+                                    <textarea
+                                        className="master-input"
+                                        placeholder="مثال: أنا صاحب مقهى وأحتاج وكيل يأخذ الطلبات من الزبائن ويقترح عليهم مشروبات جديدة بناءً على الجو..."
+                                        rows={4}
+                                        value={userDescription}
+                                        onChange={(e) => setUserDescription(e.target.value)}
+                                    />
+                                    <button
+                                        className="btn-primary btn-block magic-btn"
+                                        onClick={handleMasterAgentCreate}
+                                        disabled={isGenerating || !userDescription.trim()}
+                                    >
+                                        {isGenerating ? (
+                                            <>
+                                                <span className="loader-spinner-small"></span>
+                                                جاري التفكير والتصميم...
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Wand2 size={20} />
+                                                اصنع لي وكيلاً الآن!
+                                            </>
+                                        )}
+                                    </button>
+                                </div>
+                            )}
+
                             <div className="create-form-wrapper glass-panel">
                                 <div className="form-header">
-                                    <Sparkles size={32} className="form-icon" />
-                                    <h2>إنشاء وكيل ذكي جديد</h2>
-                                    <p>صمم وكيلاً مخصصاً يناسب احتياجاتك</p>
+                                    <Bot size={32} className="form-icon" />
+                                    <h2>{masterAgentMode ? 'مراجعة الوكيل المولد' : 'إنشاء وكيل جديد'}</h2>
+                                    <p>تخصيص إعدادات الوكيل</p>
                                 </div>
                                 <form onSubmit={handleCreateAgent} className="agent-form">
                                     <div className="form-group">
@@ -307,7 +396,7 @@ const Agents = () => {
                                             placeholder="اشرح للوكيل مهامه وشخصيته بوضوح..."
                                             value={newAgent.instruction}
                                             onChange={(e) => setNewAgent({ ...newAgent, instruction: e.target.value })}
-                                            rows={5}
+                                            rows={8}
                                             required
                                         />
                                     </div>
@@ -385,35 +474,6 @@ const Agents = () => {
                             </div>
                         </div>
                     )}
-                </div>
-            </section>
-
-            {/* Benefits Section */}
-            <section className="benefits-section">
-                <div className="container">
-                    <h2 className="section-title text-gradient">لماذا وكلاء فورتكس؟</h2>
-                    <div className="benefits-grid">
-                        <div className="benefit-card glass-panel">
-                            <div className="benefit-icon">💰</div>
-                            <h3>توفير التكاليف</h3>
-                            <p>تقليل التكاليف التشغيلية بنسبة تصل إلى 70%</p>
-                        </div>
-                        <div className="benefit-card glass-panel">
-                            <div className="benefit-icon">⚡</div>
-                            <h3>زيادة الكفاءة</h3>
-                            <p>تحسين الإنتاجية وسرعة إنجاز المهام</p>
-                        </div>
-                        <div className="benefit-card glass-panel">
-                            <div className="benefit-icon">🎯</div>
-                            <h3>دقة عالية</h3>
-                            <p>تقليل الأخطاء البشرية إلى الحد الأدنى</p>
-                        </div>
-                        <div className="benefit-card glass-panel">
-                            <div className="benefit-icon">📈</div>
-                            <h3>قابلية التوسع</h3>
-                            <p>سهولة التوسع حسب نمو أعمالك</p>
-                        </div>
-                    </div>
                 </div>
             </section>
         </div>

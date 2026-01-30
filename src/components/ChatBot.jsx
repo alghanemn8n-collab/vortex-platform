@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { MessageCircle, X, Send, Loader } from 'lucide-react';
-// import GeminiChatService from '../services/geminiService'; // Removed for backend integration
+import GeminiChatService from '../services/geminiService';
 import './ChatBot.css';
 
 const ChatBot = () => {
@@ -10,36 +10,33 @@ const ChatBot = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [chatService, setChatService] = useState(null);
     const [sessionId] = useState(`session_${Date.now()}`);
-    const [selectedAgentId, setSelectedAgentId] = useState(null);
-    const [selectedAgentName, setSelectedAgentName] = useState('Vortex');
     const messagesEndRef = useRef(null);
 
-    // رسالة ترحيبية افتراضية
+    // تهيئة خدمة Gemini
     useEffect(() => {
-        if (messages.length === 0) {
-            setMessages([{
-                id: 1,
-                text: 'مرحباً! 👋 أنا مساعد Vortex الذكي.\n\nكيف يمكنني مساعدتك اليوم؟',
-                sender: 'bot',
-                timestamp: new Date().toISOString()
-            }]);
+        const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+        if (apiKey) {
+            const service = new GeminiChatService(apiKey);
+            service.startChat(sessionId);
+            setChatService(service);
+
+            // رسالة ترحيبية افتراضية
+            if (messages.length === 0) {
+                setMessages([{
+                    id: 1,
+                    text: 'مرحباً! 👋 أنا مساعد Vortex الذكي.\n\nكيف يمكنني مساعدتك اليوم؟',
+                    sender: 'bot',
+                    timestamp: new Date().toISOString()
+                }]);
+            }
         }
-    }, []);
+    }, [sessionId]);
 
     // الاستماع لطلبات الفتح الخارجية (مثل زر ابدأ مشروعك)
     useEffect(() => {
         const handleOpenChat = (event) => {
             setIsOpen(true);
-            if (event.detail?.agentId) {
-                setSelectedAgentId(event.detail.agentId);
-                setSelectedAgentName(event.detail.agentName || 'Agent');
-                setMessages([{
-                    id: Date.now(),
-                    text: `تم الاتصال بالوكيل: ${event.detail.agentName || 'Agent'}. كيف يمكنني مساعدتك؟`,
-                    sender: 'bot',
-                    timestamp: new Date().toISOString()
-                }]);
-            } else if (event.detail?.message) {
+            if (event.detail?.message) {
                 const newMessage = {
                     id: Date.now(),
                     text: event.detail.message,
@@ -61,7 +58,7 @@ const ChatBot = () => {
 
     // إرسال رسالة
     const handleSendMessage = async () => {
-        if (!inputMessage.trim()) return;
+        if (!inputMessage.trim() || !chatService) return;
 
         const userMessage = {
             id: Date.now(),
@@ -75,29 +72,16 @@ const ChatBot = () => {
         setIsLoading(true);
 
         try {
-            const response = await fetch('/api/chat', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    message: inputMessage,
-                    session_id: sessionId,
-                    agent_id: selectedAgentId
-                })
-            });
+            const response = await chatService.sendMessage(inputMessage, sessionId);
 
-            const data = await response.json();
+            const botMessage = {
+                id: Date.now() + 1,
+                text: response.message,
+                sender: 'bot',
+                timestamp: response.timestamp || new Date().toISOString()
+            };
 
-            if (data.success) {
-                const botMessage = {
-                    id: Date.now() + 1,
-                    text: data.message,
-                    sender: 'bot',
-                    timestamp: new Date().toISOString()
-                };
-                setMessages(prev => [...prev, botMessage]);
-            } else {
-                throw new Error(data.message || 'Error from API');
-            }
+            setMessages(prev => [...prev, botMessage]);
         } catch (error) {
             console.error('Chat error:', error);
             const errorMessage = {
@@ -155,7 +139,7 @@ const ChatBot = () => {
                                 <MessageCircle size={24} />
                             </div>
                             <div>
-                                <h3>مساعد {selectedAgentName}</h3>
+                                <h3>مساعد Vortex</h3>
                                 <p className="chat-status">
                                     <span className="status-dot"></span>
                                     متصل الآن
