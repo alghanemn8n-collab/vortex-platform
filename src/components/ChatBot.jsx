@@ -1,3 +1,4 @@
+import { useState, useEffect, useRef } from 'react';
 import { MessageCircle, X, Send, Loader } from 'lucide-react';
 // import GeminiChatService from '../services/geminiService'; // Removed for backend integration
 import './ChatBot.css';
