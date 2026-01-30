@@ -1,1 +1,0 @@
-import{j as r}from"./index-Bd1Oy6PP.js";import"./react-vendor-DAZWZheY.js";import"./ui-vendor-CdyA4ZXt.js";const i=()=>r.jsx("div",{className:"container",style:{padding:"4rem 0"},children:r.jsx("h1",{children:"مركز الموارد"})});export{i as default};

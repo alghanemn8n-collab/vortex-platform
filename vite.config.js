@@ -5,21 +5,21 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [react()],
   build: {
-    // Enable code splitting for better performance
+    // Disable code splitting for Streamlit compatibility
+    // Streamlit loads the app via srcdoc which doesn't support ES module imports
     rollupOptions: {
       output: {
-        // Manual chunk splitting for vendor libraries
-        manualChunks: {
-          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
-          'ui-vendor': ['lucide-react'],
-        },
+        // Single bundle - no code splitting
+        manualChunks: undefined,
+        // Ensure single entry point
+        inlineDynamicImports: true,
       },
     },
     // Reduce chunk size warnings threshold
-    chunkSizeWarningLimit: 500,
-    // Use esbuild for minification (built-in, no extra package needed)
+    chunkSizeWarningLimit: 1000,
+    // Use esbuild for minification
     minify: 'esbuild',
-    // Target modern browsers for smaller bundles
+    // Target modern browsers
     target: 'es2020',
   },
   // Optimize dependency pre-bundling

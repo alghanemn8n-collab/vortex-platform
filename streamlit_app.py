@@ -1,5 +1,7 @@
 import streamlit as st
 import os
+import re
+import base64
 from pathlib import Path
 
 st.set_page_config(page_title="Vortex AI Platform", layout="wide", initial_sidebar_state="collapsed")
@@ -10,44 +12,48 @@ DIST_DIR = BASE_DIR / "dist"
 ASSETS_DIR = DIST_DIR / "assets"
 
 def get_vortex_html(api_key):
+    """Generate the HTML for the Vortex React app with proper module loading."""
+    
     # Check if dist exists
     if not DIST_DIR.exists():
-        return "<h1>Error: dist folder not found. Please run 'build' first.</h1>"
+        return "<h1>Error: dist folder not found. Please run 'npm run build' first.</h1>"
 
     # Read index.html
     index_html = (DIST_DIR / "index.html").read_text(encoding='utf-8')
     
-    # Read ALL CSS and JS assets
+    # Find all CSS files and inline them
     css_content = ""
-    for css_file in ASSETS_DIR.glob("*.css"):
+    for css_file in sorted(ASSETS_DIR.glob("*.css")):
         css_content += f"\n/* {css_file.name} */\n" + css_file.read_text(encoding='utf-8')
-        
-    js_content = ""
-    for js_file in ASSETS_DIR.glob("*.js"):
-        # We wrap in a block to avoid issues with multiple modules if any
-        js_content += f"\n// --- {js_file.name} ---\n" + js_file.read_text(encoding='utf-8')
     
-    # Prepare Diagnostic Script
-    diagnostics = """
+    # Find the main entry point JS file (index-*.js)
+    main_js_file = None
+    for js_file in ASSETS_DIR.glob("index-*.js"):
+        main_js_file = js_file
+        break
+    
+    if not main_js_file:
+        return "<h1>Error: Main JS entry point not found in dist/assets.</h1>"
+    
+    # Read all JS files and create blob URLs for each
+    js_files = {}
+    for js_file in ASSETS_DIR.glob("*.js"):
+        js_files[js_file.name] = js_file.read_text(encoding='utf-8')
+    
+    # Create inline script that sets up blob URLs for all modules
+    # This allows proper ES module imports between chunks
+    module_setup_script = """
     <script>
-        console.log('Vortex: Starting diagnostic shell...');
+        console.log('Vortex: Setting up module system...');
         window.onerror = function(msg, url, lineNo, columnNo, error) {
-            const errorMsg = 'Vortex Load Error: ' + msg + (url ? ' at ' + url + ':' + lineNo : '');
+            const errorMsg = 'Vortex Error: ' + msg;
             console.error(errorMsg, error);
-            const debugDiv = document.getElementById('vortex-debug') || document.createElement('div');
-            debugDiv.id = 'vortex-debug';
-            debugDiv.style.cssText = 'position:fixed; bottom:0; left:0; right:0; background:rgba(255,0,0,0.9); color:white; padding:10px; z-index:99999; font-size:12px; font-family:monospace;';
-            debugDiv.innerText = errorMsg;
-            document.body.appendChild(debugDiv);
         };
-        window.addEventListener('unhandledrejection', function(event) {
-            console.error('Vortex: Unhandled promise rejection:', event.reason);
-        });
     </script>
     """
     
-    # Prepare the Shim
-    shim = f"""
+    # API Shim Script
+    shim_script = f"""
     <script>
         window.VORTEX_API_KEY = "{api_key}";
         console.log('Vortex: API Shim initialized.');
@@ -72,6 +78,14 @@ def get_vortex_html(api_key):
                     return new Response(JSON.stringify({{ success: true }}), {{ status: 200 }});
                 }}
                 return new Response(JSON.stringify({{ agents }}), {{ status: 200 }});
+            }}
+            
+            if (url.includes('/api/settings/status')) {{
+                return new Response(JSON.stringify({{ 
+                    api_key_set: !!window.VORTEX_API_KEY,
+                    agents_count: JSON.parse(localStorage.getItem('vortex_agents') || '[]').length,
+                    projects_count: 0
+                }}), {{ status: 200 }});
             }}
             
             if (url.includes('/api/chat')) {{
@@ -114,26 +128,75 @@ def get_vortex_html(api_key):
     </script>
     """
     
-    import re
+    # Build the complete HTML
     html = index_html
     
-    # 1. Clean up existing tags
-    html = re.sub(r'<script type="module" crossorigin src="/assets/index-.*?\.js"></script>', '', html)
-    html = re.sub(r'<link rel="stylesheet" crossorigin href="/assets/index-.*?\.css">', '', html)
+    # Remove existing script/link tags that reference assets
+    html = re.sub(r'<script type="module" crossorigin src="/assets/[^"]+\.js"></script>', '', html)
+    html = re.sub(r'<link rel="stylesheet" crossorigin href="/assets/[^"]+\.css">', '', html)
     
-    # 2. Add Loading State to #root
-    loading_html = '<div id="root" style="background:#050505; color:#00f0ff; height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; font-family:Cairo, sans-serif; direction:rtl;"><h2>جارٍ تشغيل Vortex AI...</h2><div style="width:50px; height:50px; border:3px solid rgba(0,240,255,0.3); border-radius:50%; border-top-color:#00f0ff; animation:spin 1s linear infinite;"></div><style>@keyframes spin{to{transform:rotate(360deg)}}</style></div>'
+    # Loading state for #root
+    loading_html = '''<div id="root" style="background:#050505; color:#00f0ff; height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; font-family:Cairo, sans-serif; direction:rtl;"><h2>جارٍ تشغيل Vortex AI...</h2><div style="width:50px; height:50px; border:3px solid rgba(0,240,255,0.3); border-radius:50%; border-top-color:#00f0ff; animation:spin 1s linear infinite;"></div><style>@keyframes spin{to{transform:rotate(360deg)}}</style></div>'''
     html = html.replace('<div id="root"></div>', loading_html)
     
-    # 3. Inject Everything
+    # Create a unified bundle by loading modules in the correct order
+    # We need to: 1) inline vendor chunks as IIFEs, 2) then load the main app
+    
+    # Sort JS files: vendors first, then other chunks, then index last
+    vendor_files = []
+    other_files = []
+    main_file_content = ""
+    
+    for name, content in js_files.items():
+        if 'vendor' in name:
+            vendor_files.append((name, content))
+        elif name.startswith('index-'):
+            main_file_content = content
+        else:
+            other_files.append((name, content))
+    
+    # Build combined JS with proper isolation
+    # For Vite ESM builds in srcdoc, we need to convert to a single bundle
+    # The modules share globals through window
+    
+    combined_js = """
+// Vortex Combined Bundle
+(function() {
+    'use strict';
+    
+    // Module registry
+    const __modules = {};
+    const __exports = {};
+    
+"""
+    
+    # For each vendor, wrap it properly
+    for name, content in sorted(vendor_files):
+        combined_js += f"\n// === {name} ===\n"
+        combined_js += content + "\n"
+    
+    # Add other chunks
+    for name, content in sorted(other_files):
+        combined_js += f"\n// === {name} ===\n"
+        combined_js += content + "\n"
+    
+    # Add main entry
+    combined_js += f"\n// === main entry ===\n"
+    combined_js += main_file_content + "\n"
+    
+    combined_js += """
+})();
+"""
+    
+    # Inject everything into head
     injection = f"""
-    {diagnostics}
+    {module_setup_script}
     <style>
     {css_content}
     </style>
-    {shim}
+    {shim_script}
     <script type="module">
-    {js_content}
+    {combined_js}
     </script>
     """
     
@@ -142,7 +205,7 @@ def get_vortex_html(api_key):
     else:
         html = f"<html><head>{injection}</head><body>{html}</body></html>"
     
-    # Fix relative paths for static assets
+    # Fix relative paths
     html = html.replace('href="/vite.svg"', 'href="https://vortex-platform.netlify.app/vite.svg"')
     
     return html
@@ -162,7 +225,7 @@ with st.sidebar:
 vortex_html = get_vortex_html(api_key)
 st.components.v1.html(vortex_html, height=1000, scrolling=True)
 
-# Add custom CSS to hide Streamlit UI elements for a cleaner look
+# Hide Streamlit UI elements
 st.markdown("""
 <style>
     #MainMenu {visibility: hidden;}
