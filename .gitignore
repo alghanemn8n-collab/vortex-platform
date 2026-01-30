@@ -21,7 +21,7 @@ __pycache__/
 node_modules/
 
 # Build outputs
-dist/
+# dist/
 build/
 *.egg-info/
 
