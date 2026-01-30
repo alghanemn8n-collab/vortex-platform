@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import './Home.css';
 
 const Home = () => {
+    const navigate = useNavigate();
     const [currentSlide, setCurrentSlide] = useState(0);
 
     const slides = [
@@ -56,7 +58,7 @@ const Home = () => {
                             <p className="hero-description">{slide.description}</p>
                             <div className="hero-actions">
                                 <button className="btn-primary" onClick={handleStartProject}>ابدأ الآن</button>
-                                <button className="btn-secondary" onClick={() => window.location.href = '/about'}>استكشف الآن</button>
+                                <button className="btn-secondary" onClick={() => navigate('/about')}>استكشف الآن</button>
                             </div>
                         </div>
 

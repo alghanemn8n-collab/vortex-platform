@@ -1,7 +1,10 @@
+import { useNavigate } from 'react-router-dom';
 import './About.css';
 import { Target, Rocket, Shield, Zap, Globe, Users, Heart, Lightbulb } from 'lucide-react';
 
 const About = () => {
+    const navigate = useNavigate();
+
     const goals = [
         {
             icon: <Zap size={30} />,
@@ -116,8 +119,8 @@ const About = () => {
                         <h2 className="text-gradient">هل أنت جاهز لتغيير قواعد اللعبة؟</h2>
                         <p>انضم إلينا الآن ودعنا نبني منصة SaaS الذكية الخاصة بك.</p>
                         <div className="cta-btns">
-                            <button className="btn-primary" onClick={() => window.location.href = '/contact'}>ابدأ مشروعك الآن</button>
-                            <button className="btn-secondary" onClick={() => window.location.href = '/services'}>استكشف خدماتنا</button>
+                            <button className="btn-primary" onClick={() => navigate('/contact')}>ابدأ مشروعك الآن</button>
+                            <button className="btn-secondary" onClick={() => navigate('/solutions')}>استكشف خدماتنا</button>
                         </div>
                     </div>
                 </div>

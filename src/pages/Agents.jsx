@@ -1,9 +1,14 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Bot, Plus, Settings, BarChart3, MessageSquare, Sparkles, Trash2, Play, Zap } from 'lucide-react';
 import './Agents.css';
 
 const Agents = () => {
+    const navigate = useNavigate();
     const [agents, setAgents] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [activeTab, setActiveTab] = useState('dashboard');
+    const [stats, setStats] = useState({ agents: 0, chats: 0, apiStatus: false });
     const [newAgent, setNewAgent] = useState({
         name: '',
         instruction: '',
@@ -17,6 +22,7 @@ const Agents = () => {
             const response = await fetch('/api/agents');
             const data = await response.json();
             setAgents(data.agents || []);
+            setStats(prev => ({ ...prev, agents: (data.agents || []).length }));
         } catch (error) {
             console.error('Error fetching agents:', error);
         } finally {
@@ -24,8 +30,24 @@ const Agents = () => {
         }
     };
 
+    // Check API status
+    const checkApiStatus = async () => {
+        try {
+            const response = await fetch('/api/settings/status');
+            const data = await response.json();
+            setStats(prev => ({
+                ...prev,
+                apiStatus: data.api_key_set,
+                agents: data.agents_count || 0
+            }));
+        } catch (error) {
+            console.error('Error checking API status:', error);
+        }
+    };
+
     useEffect(() => {
         fetchAgents();
+        checkApiStatus();
     }, []);
 
     const handleCreateAgent = async (e) => {
@@ -39,6 +61,7 @@ const Agents = () => {
             if (response.ok) {
                 setNewAgent({ name: '', instruction: '', model: 'gemini-2.0-flash', tools: [] });
                 fetchAgents();
+                setActiveTab('agents');
                 alert('تم إنشاء الوكيل بنجاح! 🎉');
             }
         } catch (error) {
@@ -57,27 +80,23 @@ const Agents = () => {
         }
     };
 
-    const benefits = [
-        {
-            title: 'توفير التكاليف',
-            description: 'تقليل التكاليف التشغيلية بنسبة تصل إلى 70%',
-            icon: '💰'
-        },
-        {
-            title: 'زيادة الكفاءة',
-            description: 'تحسين الإنتاجية وسرعة إنجاز المهام',
-            icon: '⚡'
-        },
-        {
-            title: 'دقة عالية',
-            description: 'تقليل الأخطاء البشرية إلى الحد الأدنى',
-            icon: '🎯'
-        },
-        {
-            title: 'قابلية التوسع',
-            description: 'سهولة التوسع حسب نمو أعمالك',
-            icon: '📈'
-        }
+    const handleChatWithAgent = (agent) => {
+        const event = new CustomEvent('open-vortex-chat', {
+            detail: { agentId: agent.id, agentName: agent.name }
+        });
+        window.dispatchEvent(event);
+    };
+
+    const availableTools = [
+        { id: 'google_search', name: 'بحث جوجل', icon: '🔍' },
+        { id: 'code_executor', name: 'منفذ الأكواد', icon: '💻' }
+    ];
+
+    const tabs = [
+        { id: 'dashboard', name: 'لوحة التحكم', icon: <BarChart3 size={18} /> },
+        { id: 'agents', name: 'الوكلاء', icon: <Bot size={18} /> },
+        { id: 'create', name: 'إنشاء وكيل', icon: <Plus size={18} /> },
+        { id: 'settings', name: 'الإعدادات', icon: <Settings size={18} /> }
     ];
 
     return (
@@ -87,164 +106,314 @@ const Agents = () => {
                 <div className="hero-overlay"></div>
                 <div className="container">
                     <div className="hero-content">
-                        <h1 className="text-gradient animate-float">وكلاء فورتكس الذكية</h1>
+                        <h1 className="text-gradient animate-float">
+                            <Bot size={48} className="hero-icon" />
+                            مصنع الوكلاء الذكية
+                        </h1>
                         <p className="hero-subtitle">
-                            قوة الذكاء الاصطناعي في خدمة أعمالك
-                        </p>
-                        <p className="hero-description">
-                            وكلاء فورتكس هم مساعدون أذكياء يعملون من أجلك على مدار الساعة.
-                            مدعومون بأحدث تقنيات الذكاء الاصطناعي من Google، يمكنهم فهم السياق،
-                            التعلم من التجارب، واتخاذ قرارات ذكية لتحسين أعمالك وزيادة إنتاجيتك.
+                            أنشئ وأدر وكلاء AI متطورين يعملون لأجلك على مدار الساعة
                         </p>
                     </div>
                 </div>
             </section>
 
-            {/* Dynamic Agents List */}
-            <section className="agent-types-section">
+            {/* Dashboard Main Content */}
+            <section className="dashboard-section">
                 <div className="container">
-                    <h2 className="section-title text-gradient">مصنع الوكلاء (Agent Factory)</h2>
+                    {/* Tab Navigation */}
+                    <div className="dashboard-tabs glass-panel">
+                        {tabs.map(tab => (
+                            <button
+                                key={tab.id}
+                                className={`tab-btn ${activeTab === tab.id ? 'active' : ''}`}
+                                onClick={() => setActiveTab(tab.id)}
+                            >
+                                {tab.icon}
+                                <span>{tab.name}</span>
+                            </button>
+                        ))}
+                    </div>
 
-                    {isLoading ? (
-                        <div className="text-center">جاري تحميل الوكلاء...</div>
-                    ) : (
-                        <div className="agents-grid">
-                            {agents.map((agent) => (
-                                <div key={agent.id} className="agent-card glass-panel">
-                                    <div className="agent-icon">🤖</div>
-                                    <h3>{agent.name}</h3>
-                                    <p className="agent-description" style={{ fontSize: '0.9rem', opacity: 0.8 }}>
-                                        {agent.instruction.substring(0, 100)}...
-                                    </p>
-                                    <div className="agent-meta" style={{ marginTop: '15px' }}>
-                                        <span className="feature-badge" style={{ background: 'var(--secondary)' }}>{agent.model}</span>
-                                        {agent.tools.map((tool, idx) => (
-                                            <span key={idx} className="feature-badge">{tool}</span>
-                                        ))}
+                    {/* Dashboard Tab */}
+                    {activeTab === 'dashboard' && (
+                        <div className="dashboard-content">
+                            {/* Stats Cards */}
+                            <div className="stats-grid">
+                                <div className="stat-card glass-panel">
+                                    <div className="stat-icon agents-icon">
+                                        <Bot size={28} />
                                     </div>
-                                    <div className="agent-actions" style={{ marginTop: '20px', display: 'flex', gap: '10px' }}>
-                                        <button
-                                            onClick={() => {
-                                                const event = new CustomEvent('open-vortex-chat', {
-                                                    detail: { agentId: agent.id, agentName: agent.name }
-                                                });
-                                                window.dispatchEvent(event);
-                                            }}
-                                            style={{ background: 'var(--primary)', border: 'none', color: '#fff', padding: '5px 15px', borderRadius: '5px', cursor: 'pointer', flex: 1 }}
-                                        >
-                                            تحدث الآن
-                                        </button>
-                                        <button
-                                            onClick={() => handleDeleteAgent(agent.id)}
-                                            style={{ background: 'transparent', border: '1px solid #ff4444', color: '#ff4444', padding: '5px 15px', borderRadius: '5px', cursor: 'pointer' }}
-                                        >
-                                            حذف
+                                    <div className="stat-info">
+                                        <h3>{stats.agents}</h3>
+                                        <p>وكلاء نشطين</p>
+                                    </div>
+                                </div>
+                                <div className="stat-card glass-panel">
+                                    <div className="stat-icon chats-icon">
+                                        <MessageSquare size={28} />
+                                    </div>
+                                    <div className="stat-info">
+                                        <h3>{stats.chats || 0}</h3>
+                                        <p>محادثات اليوم</p>
+                                    </div>
+                                </div>
+                                <div className="stat-card glass-panel">
+                                    <div className={`stat-icon api-icon ${stats.apiStatus ? 'connected' : 'disconnected'}`}>
+                                        <Zap size={28} />
+                                    </div>
+                                    <div className="stat-info">
+                                        <h3>{stats.apiStatus ? 'متصل' : 'غير متصل'}</h3>
+                                        <p>حالة Gemini API</p>
+                                    </div>
+                                </div>
+                                <div className="stat-card glass-panel highlight">
+                                    <div className="stat-icon create-icon">
+                                        <Sparkles size={28} />
+                                    </div>
+                                    <div className="stat-info">
+                                        <button className="quick-create-btn" onClick={() => setActiveTab('create')}>
+                                            إنشاء وكيل جديد
                                         </button>
                                     </div>
                                 </div>
-                            ))}
+                            </div>
 
-                            {/* Special Card for adding new */}
-                            <div className="agent-card glass-panel" style={{ borderStyle: 'dashed', borderColor: 'var(--primary)', opacity: 0.7 }}>
-                                <div className="agent-icon">➕</div>
-                                <h3>أضف وكيلاً جديداً</h3>
-                                <p>قم بتخصيص وكيل ذكي لمهمة محددة</p>
+                            {/* Quick Actions */}
+                            <div className="quick-actions glass-panel">
+                                <h3>إجراءات سريعة</h3>
+                                <div className="actions-grid">
+                                    <button className="action-btn" onClick={() => setActiveTab('create')}>
+                                        <Plus size={20} />
+                                        <span>وكيل جديد</span>
+                                    </button>
+                                    <button className="action-btn" onClick={() => navigate('/image-generator')}>
+                                        <Sparkles size={20} />
+                                        <span>مولد الصور</span>
+                                    </button>
+                                    <button className="action-btn" onClick={() => navigate('/solutions')}>
+                                        <BarChart3 size={20} />
+                                        <span>مختبر الابتكار</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* Recent Agents Preview */}
+                            {agents.length > 0 && (
+                                <div className="recent-agents glass-panel">
+                                    <h3>آخر الوكلاء</h3>
+                                    <div className="agents-preview">
+                                        {agents.slice(0, 3).map(agent => (
+                                            <div key={agent.id} className="agent-preview-card">
+                                                <div className="agent-avatar">🤖</div>
+                                                <div className="agent-preview-info">
+                                                    <h4>{agent.name}</h4>
+                                                    <span className="agent-model">{agent.model}</span>
+                                                </div>
+                                                <button className="chat-btn" onClick={() => handleChatWithAgent(agent)}>
+                                                    <MessageSquare size={16} />
+                                                </button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    {/* Agents List Tab */}
+                    {activeTab === 'agents' && (
+                        <div className="agents-list-content">
+                            {isLoading ? (
+                                <div className="loading-state glass-panel">
+                                    <div className="loader"></div>
+                                    <p>جاري تحميل الوكلاء...</p>
+                                </div>
+                            ) : agents.length === 0 ? (
+                                <div className="empty-state glass-panel">
+                                    <Bot size={64} className="empty-icon" />
+                                    <h3>لا يوجد وكلاء بعد</h3>
+                                    <p>قم بإنشاء وكيلك الأول لبدء رحلة الأتمتة الذكية</p>
+                                    <button className="btn-primary" onClick={() => setActiveTab('create')}>
+                                        <Plus size={18} />
+                                        إنشاء وكيل جديد
+                                    </button>
+                                </div>
+                            ) : (
+                                <div className="agents-grid">
+                                    {agents.map((agent) => (
+                                        <div key={agent.id} className="agent-card glass-panel">
+                                            <div className="agent-header">
+                                                <div className="agent-icon">🤖</div>
+                                                <div className="agent-badge">{agent.model}</div>
+                                            </div>
+                                            <h3>{agent.name}</h3>
+                                            <p className="agent-instruction">
+                                                {agent.instruction.length > 100
+                                                    ? agent.instruction.substring(0, 100) + '...'
+                                                    : agent.instruction}
+                                            </p>
+                                            <div className="agent-tools">
+                                                {agent.tools.map((tool, idx) => (
+                                                    <span key={idx} className="tool-badge">
+                                                        {tool === 'google_search' ? '🔍' : '💻'} {tool}
+                                                    </span>
+                                                ))}
+                                            </div>
+                                            <div className="agent-actions">
+                                                <button className="action-btn primary" onClick={() => handleChatWithAgent(agent)}>
+                                                    <Play size={16} />
+                                                    تشغيل
+                                                </button>
+                                                <button className="action-btn danger" onClick={() => handleDeleteAgent(agent.id)}>
+                                                    <Trash2 size={16} />
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    {/* Create Agent Tab */}
+                    {activeTab === 'create' && (
+                        <div className="create-agent-content">
+                            <div className="create-form-wrapper glass-panel">
+                                <div className="form-header">
+                                    <Sparkles size={32} className="form-icon" />
+                                    <h2>إنشاء وكيل ذكي جديد</h2>
+                                    <p>صمم وكيلاً مخصصاً يناسب احتياجاتك</p>
+                                </div>
+                                <form onSubmit={handleCreateAgent} className="agent-form">
+                                    <div className="form-group">
+                                        <label>
+                                            <Bot size={16} />
+                                            اسم الوكيل
+                                        </label>
+                                        <input
+                                            type="text"
+                                            placeholder="مثلاً: مساعد المبيعات الذكي"
+                                            value={newAgent.name}
+                                            onChange={(e) => setNewAgent({ ...newAgent, name: e.target.value })}
+                                            required
+                                        />
+                                    </div>
+                                    <div className="form-group">
+                                        <label>
+                                            <MessageSquare size={16} />
+                                            التعليمات البرمجية (System Prompt)
+                                        </label>
+                                        <textarea
+                                            placeholder="اشرح للوكيل مهامه وشخصيته بوضوح..."
+                                            value={newAgent.instruction}
+                                            onChange={(e) => setNewAgent({ ...newAgent, instruction: e.target.value })}
+                                            rows={5}
+                                            required
+                                        />
+                                    </div>
+                                    <div className="form-row">
+                                        <div className="form-group">
+                                            <label>
+                                                <Zap size={16} />
+                                                النموذج (Model)
+                                            </label>
+                                            <select
+                                                value={newAgent.model}
+                                                onChange={(e) => setNewAgent({ ...newAgent, model: e.target.value })}
+                                            >
+                                                <option value="gemini-2.0-flash">Gemini 2.0 Flash (سريع)</option>
+                                                <option value="gemini-1.5-pro">Gemini 1.5 Pro (متقدم)</option>
+                                            </select>
+                                        </div>
+                                        <div className="form-group">
+                                            <label>
+                                                <Settings size={16} />
+                                                الأدوات المتاحة
+                                            </label>
+                                            <div className="tools-selector">
+                                                {availableTools.map(tool => (
+                                                    <label key={tool.id} className="tool-checkbox">
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={newAgent.tools.includes(tool.id)}
+                                                            onChange={(e) => {
+                                                                const tools = e.target.checked
+                                                                    ? [...newAgent.tools, tool.id]
+                                                                    : newAgent.tools.filter(t => t !== tool.id);
+                                                                setNewAgent({ ...newAgent, tools });
+                                                            }}
+                                                        />
+                                                        <span className="checkbox-label">
+                                                            {tool.icon} {tool.name}
+                                                        </span>
+                                                    </label>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <button type="submit" className="btn-primary btn-large submit-btn">
+                                        <Sparkles size={20} />
+                                        إطلاق الوكيل 🚀
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Settings Tab */}
+                    {activeTab === 'settings' && (
+                        <div className="settings-content glass-panel">
+                            <h2>
+                                <Settings size={24} />
+                                إعدادات النظام
+                            </h2>
+                            <div className="settings-grid">
+                                <div className="setting-card">
+                                    <h3>حالة الاتصال</h3>
+                                    <div className={`status-indicator ${stats.apiStatus ? 'connected' : 'disconnected'}`}>
+                                        <Zap size={20} />
+                                        <span>{stats.apiStatus ? 'Gemini API متصل' : 'API غير متصل'}</span>
+                                    </div>
+                                </div>
+                                <div className="setting-card">
+                                    <h3>إحصائيات</h3>
+                                    <ul className="stats-list">
+                                        <li><span>عدد الوكلاء:</span> <strong>{stats.agents}</strong></li>
+                                        <li><span>المحادثات:</span> <strong>{stats.chats || 0}</strong></li>
+                                    </ul>
+                                </div>
                             </div>
                         </div>
                     )}
                 </div>
             </section>
 
-            {/* Agent Creation Form */}
-            <section className="agent-form-section" style={{ padding: '60px 0', background: 'rgba(255,255,255,0.02)' }}>
-                <div className="container">
-                    <div className="glass-panel" style={{ maxWidth: '800px', margin: '0 auto', padding: '40px' }}>
-                        <h2 className="section-title text-gradient" style={{ marginBottom: '30px' }}>إنشاء وكيل ذكي</h2>
-                        <form onSubmit={handleCreateAgent} style={{ display: 'grid', gap: '20px' }}>
-                            <div>
-                                <label style={{ display: 'block', marginBottom: '8px' }}>اسم الوكيل</label>
-                                <input
-                                    type="text"
-                                    placeholder="مثلاً: مساعد المبيعات"
-                                    value={newAgent.name}
-                                    onChange={(e) => setNewAgent({ ...newAgent, name: e.target.value })}
-                                    style={{ width: '100%', padding: '12px', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)', borderRadius: '8px', color: '#fff' }}
-                                    required
-                                />
-                            </div>
-                            <div>
-                                <label style={{ display: 'block', marginBottom: '8px' }}>التعليمات البرمجية (System Instruction)</label>
-                                <textarea
-                                    placeholder="اشرح للوكيل مهامه بوضوح..."
-                                    value={newAgent.instruction}
-                                    onChange={(e) => setNewAgent({ ...newAgent, instruction: e.target.value })}
-                                    style={{ width: '100%', padding: '12px', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)', borderRadius: '8px', color: '#fff', minHeight: '120px' }}
-                                    required
-                                />
-                            </div>
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
-                                <div>
-                                    <label style={{ display: 'block', marginBottom: '8px' }}>النموذج (Model)</label>
-                                    <select
-                                        value={newAgent.model}
-                                        onChange={(e) => setNewAgent({ ...newAgent, model: e.target.value })}
-                                        style={{ width: '100%', padding: '12px', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)', borderRadius: '8px', color: '#fff' }}
-                                    >
-                                        <option value="gemini-2.0-flash">Gemini 2.0 Flash</option>
-                                        <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label style={{ display: 'block', marginBottom: '8px' }}>الأدوات (Tools)</label>
-                                    <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-                                        {['google_search', 'code_executor'].map(tool => (
-                                            <label key={tool} style={{ display: 'flex', alignItems: 'center', gap: '5px', cursor: 'pointer' }}>
-                                                <input
-                                                    type="checkbox"
-                                                    checked={newAgent.tools.includes(tool)}
-                                                    onChange={(e) => {
-                                                        const tools = e.target.checked
-                                                            ? [...newAgent.tools, tool]
-                                                            : newAgent.tools.filter(t => t !== tool);
-                                                        setNewAgent({ ...newAgent, tools });
-                                                    }}
-                                                />
-                                                {tool === 'google_search' ? 'بحث جوجل' : 'منفذ الأكواد'}
-                                            </label>
-                                        ))}
-                                    </div>
-                                </div>
-                            </div>
-                            <button type="submit" className="btn-primary" style={{ marginTop: '20px', padding: '15px' }}>
-                                إطلاق الوكيل الآن 🚀
-                            </button>
-                        </form>
-                    </div>
-                </div>
-            </section>
-
-            {/* Benefits */}
+            {/* Benefits Section */}
             <section className="benefits-section">
                 <div className="container">
                     <h2 className="section-title text-gradient">لماذا وكلاء فورتكس؟</h2>
                     <div className="benefits-grid">
-                        {benefits.map((benefit, index) => (
-                            <div key={index} className="benefit-card glass-panel">
-                                <div className="benefit-icon">{benefit.icon}</div>
-                                <h3>{benefit.title}</h3>
-                                <p>{benefit.description}</p>
-                            </div>
-                        ))}
+                        <div className="benefit-card glass-panel">
+                            <div className="benefit-icon">💰</div>
+                            <h3>توفير التكاليف</h3>
+                            <p>تقليل التكاليف التشغيلية بنسبة تصل إلى 70%</p>
+                        </div>
+                        <div className="benefit-card glass-panel">
+                            <div className="benefit-icon">⚡</div>
+                            <h3>زيادة الكفاءة</h3>
+                            <p>تحسين الإنتاجية وسرعة إنجاز المهام</p>
+                        </div>
+                        <div className="benefit-card glass-panel">
+                            <div className="benefit-icon">🎯</div>
+                            <h3>دقة عالية</h3>
+                            <p>تقليل الأخطاء البشرية إلى الحد الأدنى</p>
+                        </div>
+                        <div className="benefit-card glass-panel">
+                            <div className="benefit-icon">📈</div>
+                            <h3>قابلية التوسع</h3>
+                            <p>سهولة التوسع حسب نمو أعمالك</p>
+                        </div>
                     </div>
-                </div>
-            </section>
-
-            {/* CTA */}
-            <section className="cta-section">
-                <div className="container">
-                    <h2 className="text-gradient">جاهز لتمكين أعمالك بالوكلاء الذكية؟</h2>
-                    <p>ابدأ رحلتك نحو التحول الرقمي اليوم</p>
-                    <button className="btn-primary btn-large">احجز استشارة مجانية</button>
                 </div>
             </section>
         </div>
@@ -252,4 +421,3 @@ const Agents = () => {
 };
 
 export default Agents;
-
