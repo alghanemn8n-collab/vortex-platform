@@ -1,0 +1,414 @@
+/* About Page Styles - Premium Futuristic Design */
+.about-page {
+    background: #050505;
+    color: #fff;
+    overflow-x: hidden;
+}
+
+/* Hero Section */
+.about-hero {
+    position: relative;
+    padding: 160px 0 100px;
+    background: radial-gradient(circle at 20% 50%, rgba(112, 0, 255, 0.15) 0%, transparent 50%),
+        radial-gradient(circle at 80% 80%, rgba(0, 240, 255, 0.15) 0%, transparent 50%);
+    text-align: center;
+    overflow: hidden;
+}
+
+.hero-bg-shapes .shape {
+    position: absolute;
+    filter: blur(80px);
+    z-index: 0;
+    opacity: 0.4;
+    animation: pulse 10s infinite alternate;
+}
+
+.shape-1 {
+    width: 400px;
+    height: 400px;
+    background: #7000ff;
+    top: -100px;
+    left: -100px;
+}
+
+.shape-2 {
+    width: 300px;
+    height: 300px;
+    background: #00f0ff;
+    bottom: -50px;
+    right: -50px;
+}
+
+@keyframes pulse {
+    from {
+        transform: scale(1);
+        opacity: 0.3;
+    }
+
+    to {
+        transform: scale(1.2);
+        opacity: 0.5;
+    }
+}
+
+.badge {
+    display: inline-block;
+    padding: 8px 16px;
+    background: rgba(112, 0, 255, 0.2);
+    border: 1px solid rgba(112, 0, 255, 0.4);
+    border-radius: 30px;
+    font-size: 0.9rem;
+    color: #00f0ff;
+    margin-bottom: 24px;
+    backdrop-filter: blur(5px);
+}
+
+.hero-title {
+    font-size: 4rem;
+    font-weight: 800;
+    margin-bottom: 24px;
+    line-height: 1.2;
+}
+
+.hero-description {
+    max-width: 800px;
+    margin: 0 auto;
+    font-size: 1.25rem;
+    color: #b0b0b0;
+    line-height: 1.8;
+}
+
+/* Goals Section */
+.goals-section {
+    padding: 100px 0;
+}
+
+.section-header {
+    text-align: center;
+    margin-bottom: 60px;
+}
+
+.section-title {
+    font-size: 3rem;
+    margin-bottom: 16px;
+}
+
+.goals-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 30px;
+}
+
+.goal-card {
+    padding: 40px;
+    border-radius: 24px;
+    text-align: center;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.goal-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+    border-color: rgba(112, 0, 255, 0.3);
+}
+
+.goal-icon-wrapper {
+    width: 70px;
+    height: 70px;
+    background: linear-gradient(135deg, #7000ff 0%, #00f0ff 100%);
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 24px;
+    color: #fff;
+}
+
+.goal-card h3 {
+    font-size: 1.5rem;
+    margin-bottom: 16px;
+}
+
+.goal-card p {
+    color: #b0b0b0;
+    line-height: 1.6;
+}
+
+/* Philosophy Section */
+.philosophy-section {
+    padding: 100px 0;
+    background: url('https://w0.peakpx.com/wallpaper/559/314/HD-wallpaper-abstract-dark-mesh-background-minimalism.jpg');
+    background-size: cover;
+    background-attachment: fixed;
+    position: relative;
+}
+
+.philosophy-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(5, 5, 5, 0.85);
+}
+
+.philosophy-content {
+    position: relative;
+    padding: 60px;
+    border-radius: 32px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.ph-text h2 {
+    font-size: 2.5rem;
+    margin-bottom: 24px;
+}
+
+.ph-text p {
+    font-size: 1.2rem;
+    line-height: 2;
+    color: #e0e0e0;
+    margin-bottom: 40px;
+}
+
+.ph-stats {
+    display: flex;
+    gap: 60px;
+    flex-wrap: wrap;
+}
+
+.stat h4 {
+    font-size: 1.8rem;
+    color: #00f0ff;
+    margin-bottom: 8px;
+}
+
+.stat p {
+    margin: 0;
+    color: #b0b0b0;
+    font-size: 0.9rem;
+}
+
+/* Vision / Founders Message */
+.vision-message {
+    padding: 100px 0;
+}
+
+.vision-card {
+    padding: 80px 60px;
+    border-radius: 40px;
+    text-align: center;
+    position: relative;
+}
+
+.quote-icon {
+    font-size: 8rem;
+    color: rgba(112, 0, 255, 0.2);
+    position: absolute;
+    top: 20px;
+    left: 40px;
+    font-family: serif;
+}
+
+blockquote {
+    font-size: 2rem;
+    font-style: italic;
+    line-height: 1.5;
+    margin-bottom: 30px;
+    position: relative;
+    z-index: 1;
+}
+
+cite {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #7000ff;
+    display: block;
+}
+
+/* CTA */
+.about-cta {
+    padding-bottom: 100px;
+}
+
+.cta-wrapper {
+    padding: 80px;
+    border-radius: 40px;
+    text-align: center;
+    background: linear-gradient(135deg, rgba(112, 0, 255, 0.1) 0%, rgba(0, 240, 255, 0.1) 100%);
+}
+
+.cta-wrapper h2 {
+    font-size: 3rem;
+    margin-bottom: 20px;
+}
+
+.cta-btns {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    margin-top: 40px;
+}
+
+/* Animations */
+.animate-up {
+    animation: fadeInUp 0.8s ease backwards;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@media (max-width: 768px) {
+    .about-hero {
+        padding: 120px 0 60px;
+    }
+
+    .hero-title {
+        font-size: 2.2rem;
+        margin-bottom: 16px;
+    }
+
+    .hero-description {
+        font-size: 1rem;
+        padding: 0 1rem;
+        line-height: 1.8;
+    }
+
+    .goals-section {
+        padding: 60px 0;
+    }
+
+    .section-header {
+        margin-bottom: 40px;
+    }
+
+    .section-title {
+        font-size: 2rem;
+    }
+
+    .goals-grid {
+        grid-template-columns: 1fr;
+        gap: 20px;
+        padding: 0 1rem;
+    }
+
+    .goal-card {
+        padding: 30px 20px;
+    }
+
+    .philosophy-section {
+        padding: 60px 0;
+    }
+
+    .philosophy-content {
+        padding: 30px 20px;
+        margin: 0 1rem;
+    }
+
+    .ph-text h2 {
+        font-size: 1.8rem;
+    }
+
+    .ph-text p {
+        font-size: 1rem;
+        line-height: 1.8;
+    }
+
+    .ph-stats {
+        gap: 30px;
+        justify-content: center;
+    }
+
+    .stat {
+        flex: 1;
+        min-width: 120px;
+        text-align: center;
+    }
+
+    .stat h4 {
+        font-size: 1.5rem;
+    }
+
+    .vision-message {
+        padding: 60px 0;
+    }
+
+    .vision-card {
+        padding: 40px 20px;
+        margin: 0 1rem;
+    }
+
+    .quote-icon {
+        font-size: 4rem;
+        top: 10px;
+        left: 20px;
+    }
+
+    blockquote {
+        font-size: 1.2rem;
+        line-height: 1.6;
+    }
+
+    cite {
+        font-size: 1rem;
+    }
+
+    .about-cta {
+        padding-bottom: 60px;
+    }
+
+    .cta-wrapper {
+        padding: 40px 20px;
+        margin: 0 1rem;
+    }
+
+    .cta-wrapper h2 {
+        font-size: 2rem;
+    }
+
+    .cta-btns {
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .cta-btns button,
+    .cta-btns a {
+        width: 100%;
+        max-width: 280px;
+        margin: 0 auto;
+    }
+}
+
+/* Extra small screens */
+@media (max-width: 480px) {
+    .about-hero {
+        padding: 100px 0 40px;
+    }
+
+    .hero-title {
+        font-size: 1.8rem;
+    }
+
+    .goal-card h3 {
+        font-size: 1.2rem;
+    }
+
+    .ph-text h2 {
+        font-size: 1.5rem;
+    }
+
+    .cta-wrapper h2 {
+        font-size: 1.6rem;
+    }
+}

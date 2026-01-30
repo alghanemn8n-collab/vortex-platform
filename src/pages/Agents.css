@@ -1,0 +1,288 @@
+.agents-page {
+    width: 100%;
+}
+
+/* Hero Section */
+.agents-hero {
+    position: relative;
+    min-height: 80vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, rgba(112, 0, 255, 0.1) 0%, rgba(0, 240, 255, 0.1) 50%, rgba(0, 255, 150, 0.1) 100%);
+    overflow: hidden;
+}
+
+.agents-hero::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background:
+        radial-gradient(circle at 30% 40%, rgba(112, 0, 255, 0.2) 0%, transparent 50%),
+        radial-gradient(circle at 70% 60%, rgba(0, 240, 255, 0.2) 0%, transparent 50%);
+    animation: float-particle 15s ease-in-out infinite;
+}
+
+.agents-hero .hero-content {
+    position: relative;
+    z-index: 2;
+    text-align: center;
+    max-width: 1000px;
+    padding: 2rem;
+}
+
+.agents-hero h1 {
+    font-size: clamp(3rem, 6vw, 5rem);
+    font-weight: 900;
+    margin-bottom: 1.5rem;
+}
+
+.hero-stats {
+    display: flex;
+    justify-content: center;
+    gap: 4rem;
+    margin-top: 3rem;
+    flex-wrap: wrap;
+}
+
+.stat-item {
+    text-align: center;
+}
+
+.stat-number {
+    font-size: 3rem;
+    font-weight: 900;
+    background: var(--gradient-main);
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 0.5rem;
+}
+
+.stat-label {
+    color: var(--text-muted);
+    font-size: 1.1rem;
+}
+
+/* Agent Types Section */
+.agent-types-section {
+    padding: 6rem 1.5rem;
+    background: var(--bg-core);
+}
+
+.agents-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2.5rem;
+}
+
+.agent-card {
+    padding: 3rem 2.5rem;
+    border-radius: 16px;
+    transition: all 0.3s ease;
+    text-align: center;
+}
+
+.agent-card:hover {
+    transform: translateY(-10px) scale(1.02);
+    box-shadow: 0 20px 60px rgba(0, 240, 255, 0.3);
+}
+
+.agent-icon {
+    font-size: 4.5rem;
+    margin-bottom: 1.5rem;
+    filter: drop-shadow(0 0 20px var(--primary-glow));
+}
+
+.agent-card h3 {
+    font-size: 1.8rem;
+    color: var(--text-main);
+    margin-bottom: 1rem;
+    font-weight: 700;
+}
+
+.agent-description {
+    color: var(--text-muted);
+    line-height: 1.8;
+    margin-bottom: 2rem;
+}
+
+.agent-features {
+    display: flex;
+    gap: 0.8rem;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.feature-badge {
+    padding: 0.5rem 1rem;
+    background: var(--glass);
+    border: 1px solid var(--glass-border);
+    border-radius: 20px;
+    font-size: 0.9rem;
+    color: var(--primary);
+    font-weight: 600;
+}
+
+/* Benefits Section */
+.benefits-section {
+    padding: 6rem 1.5rem;
+    background: linear-gradient(180deg, var(--bg-core) 0%, var(--bg-secondary) 100%);
+}
+
+.benefits-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 2rem;
+}
+
+.benefit-card {
+    padding: 2.5rem 2rem;
+    border-radius: 16px;
+    text-align: center;
+    transition: all 0.3s ease;
+}
+
+.benefit-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 15px 40px rgba(112, 0, 255, 0.2);
+}
+
+.benefit-icon {
+    font-size: 3.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.benefit-card h3 {
+    font-size: 1.5rem;
+    color: var(--text-main);
+    margin-bottom: 1rem;
+    font-weight: 700;
+}
+
+.benefit-card p {
+    color: var(--text-muted);
+    line-height: 1.8;
+}
+
+/* How It Works Section */
+.how-it-works-section {
+    padding: 6rem 1.5rem;
+    background: var(--bg-core);
+}
+
+.steps-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 2rem;
+    margin-top: 3rem;
+    flex-wrap: wrap;
+}
+
+.step-item {
+    flex: 1;
+    min-width: 250px;
+    max-width: 300px;
+    text-align: center;
+    padding: 2rem;
+    background: var(--glass);
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--glass-border);
+    border-radius: 16px;
+    transition: all 0.3s ease;
+}
+
+.step-item:hover {
+    transform: scale(1.05);
+    box-shadow: 0 10px 30px rgba(0, 240, 255, 0.2);
+}
+
+.step-number {
+    width: 60px;
+    height: 60px;
+    margin: 0 auto 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    font-weight: 900;
+    background: var(--gradient-main);
+    border-radius: 50%;
+    color: var(--bg-core);
+}
+
+.step-item h3 {
+    font-size: 1.5rem;
+    color: var(--text-main);
+    margin-bottom: 1rem;
+    font-weight: 700;
+}
+
+.step-item p {
+    color: var(--text-muted);
+    line-height: 1.8;
+}
+
+.step-arrow {
+    font-size: 2.5rem;
+    color: var(--primary);
+    font-weight: 900;
+}
+
+/* CTA Section */
+.cta-section {
+    padding: 6rem 1.5rem;
+    text-align: center;
+    background: linear-gradient(135deg, rgba(112, 0, 255, 0.05) 0%, rgba(0, 240, 255, 0.05) 100%);
+}
+
+.cta-section h2 {
+    font-size: clamp(2.5rem, 4vw, 3.5rem);
+    margin-bottom: 1.5rem;
+    font-weight: 900;
+}
+
+.cta-section p {
+    font-size: 1.3rem;
+    color: var(--text-muted);
+    margin-bottom: 2.5rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .agents-hero {
+        min-height: 70vh;
+    }
+
+    .hero-stats {
+        gap: 2rem;
+    }
+
+    .stat-number {
+        font-size: 2.5rem;
+    }
+
+    .agents-grid,
+    .benefits-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .steps-container {
+        flex-direction: column;
+    }
+
+    .step-arrow {
+        transform: rotate(90deg);
+    }
+
+    .agent-types-section,
+    .benefits-section,
+    .how-it-works-section,
+    .cta-section {
+        padding: 4rem 1.5rem;
+    }
+}
